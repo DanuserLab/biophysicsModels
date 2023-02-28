@@ -24,12 +24,21 @@ nF=numel(Fname);
 %--------------------------------------------------------------------------
 dyn.ifVarDt=false(M.n_mod,1);
 dyn.needBreakOff=false(M.n_mod,1);
+dyn.updateModForce=false(M.n_mod,1);
+dyn.needFollow=false(M.n_mod,1);
 for im=1:M.n_mod
     for ip=1:numel(M.mod{im}.prop)
         if strcmp(M.mod{im}.prop{ip},'varDt')
              dyn.ifVarDt(im)=true;
         elseif strcmp(M.mod{im}.prop{ip},'needBreakOff')
             dyn.needBreakOff(im)=true;
+        elseif strcmp(M.mod{im}.prop{ip},'forceRelateMod')
+            dyn.updateModForce(im)=true;
+        elseif strcmp(M.mod{im}.prop{ip},'needFollow')
+            if isempty(M.mod{im}.var.follow)
+                error('need to assign follow info');
+            end
+            dyn.needFollow(im)=true;
         end
     end
 end

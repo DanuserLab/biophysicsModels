@@ -24,9 +24,11 @@ ip.addRequired('id_split', @(x) isnumeric(x));
 ip.addRequired('id_merge', @(x) isnumeric(x));
 ip.addParameter('plot_or_not', false, @islogical);
 ip.addParameter('only_V', false, @islogical);
+ip.addParameter('ignoreCanOrNot', false, @islogical);
 ip.parse(m,M,id_split,id_merge,varargin{:});
 %--------------------------------------------------------------------------------------------------------
 plot_or_not=ip.Results.plot_or_not;
+ignoreCanOrNot=ip.Results.ignoreCanOrNot;
 %--------------------------------------------------------------------------
             i_mod=M.i_mod.ModMembrane;  %membrane
 %--------------------------------------------------------------------------------------------------------
@@ -136,6 +138,10 @@ if isempty(can_split(can_split==true))
 else
     split.edg_add{i_edg} = edg_add(can_split==true,:);
 end
+if ignoreCanOrNot==true
+    split.can(i_edg) = true;
+    split.edg_add{i_edg} = edg_add;
+end
 %--------------------------------------------------------------------------
 %==========================================================================
 %--------------------------------------------------------------------------
@@ -164,6 +170,10 @@ if isempty(can_merge(can_merge==true))
     merge.can(i_edg) = false;
 else
     merge.edg_add{i_edg} = edg_add(can_merge==true,:);
+end
+if ignoreCanOrNot==true
+    merge.can(i_edg) = true;
+    merge.edg_add{i_edg} = edg_add;
 end
 %--------------------------------------------------------------------------
 %==========================================================================

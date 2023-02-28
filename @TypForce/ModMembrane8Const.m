@@ -42,8 +42,9 @@ fc.rn = (Vpm.r_1+dr:dr:Vpm.r_2-dr);fc.rn = fc.rn';
 fc.nr = max(size(fc.rn,1));
 Vn = zeros(fc.nr,1);
 for i = 1:fc.nr
-Vn(i) = f.ModMembrane8potential1D(fc.rn(i),Vpm,m.pm.remeshScheme);
+Vn(i)=potential.VinMembrane(fc.rn(i),Vpm,m.pm.remeshScheme);
 end
+Vn=Vn-min(Vn);
 %%
 i_sad = 1; %saddle point
 eps = 0.0;

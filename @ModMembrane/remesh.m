@@ -18,22 +18,23 @@ ip = inputParser;
 ip.CaseSensitive = true;
 ip.addRequired('m', @(x) isa(x,'ModMembrane'));
 ip.addRequired('M', @(x) isa(x,'model'));
-ip.addParameter('print_or_not', false, @islogical); %whether to ouput steps
+ip.addParameter('print_or_not', true, @islogical); %whether to ouput steps
+ip.addParameter('nFailTol', 5, @isnumeric); 
 ip.parse(m,M,varargin{:});
 %----------------------------------------------------------------------------------------
 print_or_not=ip.Results.print_or_not;
+nFailTol=ip.Results.nFailTol;
 %--------------------------------------------------------------------------
             i_mod=M.i_mod.ModMembrane;  %membrane
 %----------------------------------------------------------------------------------------
-if M.mod{i_mod}.pm.remeshScheme==0
-    Vpm=M.mod{i_mod}.pm.Vdw;
-else
     Vpm=M.mod{i_mod}.pm.Vdh;
-end
 %----------------------------------------------------------------------------------------
 %%
 changed = true; 
 remeshed=false;
+nFail=0;
+Morg=M;
+ring_ord=1;
 while (changed == true)
     %%
     r = sqrt(sum(([M.mod{i_mod}.var.coord(M.mod{i_mod}.var.edge_all(:,2),1),M.mod{i_mod}.var.coord(M.mod{i_mod}.var.edge_all(:,2),2),M.mod{i_mod}.var.coord(M.mod{i_mod}.var.edge_all(:,2),3)]...
@@ -50,25 +51,17 @@ while (changed == true)
     id_all = (1:M.mod{i_mod}.var.n_edg)';   
     idTooLong = id_all(idTooLong);
     
-    if M.mod{i_mod}.pm.remeshScheme==0
-        [flip] = remeshFlip(m,M,idTooLong);
-        idRemesh = idTooLong;
-        FSM = zeros(length(idTooLong),1);
-    else
+
         idTooShort = r<Vpm.rl_min;
         idTooShort = id_all(idTooShort);
         [split,merge] = remeshSplitMerge(m,M,idTooLong,idTooShort);
         idRemesh = [idTooLong;idTooShort];
         FSM = [ones(length(idTooLong),1);2*ones(length(idTooShort),1)]; %Flip=0 Split=1 Merge=2
-    end  
+ 
     
     nRemesh = size(idRemesh,1);
     if print_or_not==true
-        if M.mod{i_mod}.pm.remeshScheme==0
-            fprintf('======== abnormal edge: %d, long: %d\n',nRemesh,numel(idTooLong));
-        else
             fprintf('abnormal edge: %d, long: %d, short: %d\n',nRemesh,numel(idTooLong),numel(idTooShort));
-        end
     end
     %%
 %----------------------------------------------------------------------------------------    
@@ -375,8 +368,9 @@ while (changed == true)
                 end
                else
                    M=modSave;
-                   [~,id_ring_edg,~,~]=remeshRing(M.mod{i_mod},i_edg,'ring_ord', 1);
+                   [~,id_ring_edg,~,~]=remeshRing(M.mod{i_mod},i_edg,'ring_ord', ring_ord);
                    [M,~] = remeshLocRelax(m,M,M.mod{i_mod}.var.edge_all([i_edg;id_ring_edg],:),'local',1);
+                   nFail=nFail+1;
                    if print_or_not==true
                    fprintf('failed: initial extension reached loop limit\n');
                    end
@@ -483,8 +477,7 @@ while (changed == true)
                 var_new.coord(i(2),:) = [];
                 var_new.n_coord = var_new.n_coord-1;
                 
-                [M.mod{i_mod}.var,topologicalDefect] = m.remeshAddVertex(M.mod{i_mod}.pm,M.mod{i_mod}.var,var_new.coord,var_new.edge_all,var_new.face_unq,'id_merge',i_e,...
-                                                                'dens',dens_new);
+                [M.mod{i_mod}.var,topologicalDefect] = m.remeshAddVertex(M.mod{i_mod}.pm,M.mod{i_mod}.var,var_new.coord,var_new.edge_all,var_new.face_unq,'dens',dens_new);
                 if topologicalDefect==true
                    M.mod{i_mod}.failInfo='topologicalDefect';
                 else
@@ -521,8 +514,9 @@ while (changed == true)
                 end
                else
                    M=modSave;
-                   [~,id_ring_edg,~,~]=remeshRing(M.mod{i_mod},i_edg,'ring_ord', 1);
+                   [~,id_ring_edg,~,~]=remeshRing(M.mod{i_mod},i_edg,'ring_ord', ring_ord);
                    [M,~] = remeshLocRelax(m,M,M.mod{i_mod}.var.edge_all([i_edg;id_ring_edg],:),'local',1);
+                   nFail=nFail+1;
                    if print_or_not==true
                    fprintf('failed: initial merging reached loop limit\n');
                    end
@@ -539,5 +533,11 @@ while (changed == true)
     else
         changed = false;
     end
-%--------------------------------------------------------------------------    
+%--------------------------------------------------------------------------  
+   if nFail>nFailTol
+       nFail=0;
+       M=Morg;
+       ring_ord=2;
+   end
+%--------------------------------------------------------------------------
 end

@@ -20,6 +20,7 @@ classdef TypForce
         n_int %number of forces
         int_avail %availability of a given force
         dt
+        otherInfo
         pm %parameters like spring constants
     end
 %==========================================================================
@@ -126,8 +127,8 @@ classdef TypForce
             obj.int_V=cell2struct(cell(obj.n_int,1), field_tem);
             obj.int_const=cell2struct(cell(obj.n_int,1), field_tem);
             obj.int_stored=cell2struct(cell(obj.n_int,1), field_tem);
-            obj.int_comp=cell2struct(cell(obj.n_int,1), field_tem);
             obj.int_tot=cell2struct(cell(obj.n_int,1), field_tem);
+            obj.otherInfo=cell2struct(cell(obj.n_int,1), field_tem);
 %--------------------------------------------------------------------------
         end
 %==========================================================================
@@ -160,10 +161,14 @@ classdef TypForce
         [f] = ModSubstrate(f,m, varargin);
         [f] = interaction(f,mod,int_name,varargin);
         [f,V] = ModClathrin_ModMembrane(f,mod,int_name,varargin);
+        [f,V_tot,otherInfo] = ModClathrin_ModFreeParticle(f,mod,varargin);
         [id_reps_m_c_leg] = ModClathrin_ModMembrane8getIDrepulsive(f,mod,int_name,varargin);
         [id_reps_m_leg] = ModClathrin_ModMembrane8getIDrepSingle(f,mod,coord_new,O,varargin);
         [m] = ModMembrane8uK(f,m, varargin);
         [f,V] = ModFreeParticle_ModMembrane(f,mod,varargin);
+        [f] = storedForce(f,Vname,Vpm,Mname,rPara,varargin);
+        [f,Vconst] = constForce(f,Mname,md,idPair,idCoord,varargin);
+        [f,Vtot] = ModPolymerChain(f,M,varargin);
 %==========================================================================
     end
 %==========================================================================
@@ -175,6 +180,9 @@ methods(Static)
     [V] = ModClathrin_ModMemAdapter_ModMembrane8V(mod,int_name,id_td_mem,varargin);
     [id_td_mem] = ModClathrin_ModMembrane8getADP(mod,int_name,varargin);
     [S] = ModRingmem8compS(r1,r2,z1,z2);
+    %% Mex
+    [f_b,f_p,u_K,kH,f_AV,V] = ModMembraneMex(ver,pm,edg,face,j_T,J,n_node,T_s,T_e,dens);
+    [f_b,f_p,u_K,kH,f_AV,V] = ModMembraneAltMex(ver,pm,edg,face,j_T,J,n_node,T_s,T_e,dens);
 end
 end
 

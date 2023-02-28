@@ -1,4 +1,4 @@
-function [M,breakOff] = breakOff_ModClathrin(dyn,M,varargin)
+function [M,breakOffInfo] = breakOff_ModClathrin(dyn,M,varargin)
 %--------------------------------------------------------------------------
         % breakOff_ModMembrane performs the breakoff operation for
         % @ModClathrin during dynamics to check and add linkage if two
@@ -22,4 +22,5 @@ ip.addRequired('M', @(x) isa(x,'model'));
 ip.parse(dyn,M,varargin{:});
 %--------------------------------------------------------------------------
 %========================================================================================================================== 
-[M] = ModClathrin8link(M.TypChemistry,M);
+[M.mod{M.i_mod.ModClathrin},changed] = link(M.mod{M.i_mod.ModClathrin});
+breakOffInfo=struct('breakOff',changed,'id',[]);

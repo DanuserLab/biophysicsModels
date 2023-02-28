@@ -88,9 +88,11 @@ p.FaceAlpha = ip.Results.FaceAlpha;           % remove the transparency
 %p.FaceColor = 'interp';    % set the face colors to be interpolated
 p.LineStyle = LineStyle; %p.LineStyle = 'none';      % remove the lines
 p.LineWidth = LineWidth;
+p.EdgeColor=[0 1 1];
 %colormap(copper)
 f.PaperUnits = 'centimeters';
 f.PaperPosition = PaperPosition;
+material shiny;
 %--------------------------------------------------------------------------
 if ip.Results.plot_adp==true
 figure(f); hold on;

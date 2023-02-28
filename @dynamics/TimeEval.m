@@ -22,6 +22,7 @@ ip.addRequired('Fname', @(x) iscell(x));
 ip.addParameter('tCutoff', inf, @isnumeric); %specific time duration to cut off the evolution
 ip.addParameter('plot_or_not', false, @islogical);
 ip.addParameter('sMax', 0.01, @isnumeric); %maximal distance to move coordinates in M
+ip.addParameter('iPar', [], @isnumeric);
 ip.parse(dyn,M,Fname,varargin{:});
 %--------------------------------------------------------------------------
 nF=numel(Fname);
@@ -32,7 +33,7 @@ sMax=ip.Results.sMax;
 %--------------------------------------------------------------------------
 %return a structure to indicate the senario of cutoff, nS: total steps
 %done; forcedOff: due to defects, not defined cutoff conditions
-CutOff=struct('nS',[],'forcedOff',false); 
+CutOff=struct('nS',nS,'forcedOff',false,'dataStored',[]);
 %--------------------------------------------------------------------------
 %%
 ftot=cell(M.n_mod,1); %total force on each object in M
@@ -44,12 +45,26 @@ for iF=1:nF
     Vrec.(Fname{iF})=zeros(nS,1);
 end
 t=0;
+breakOff=false;
 for iS=1:nS
-%     fprintf('iS %d\n',iS);
+%     fprintf('iS %d  %d\n',iS,ip.Results.iPar);
 %     disp([max(max(M.mod{M.i_mod.ModMembrane}.var.j_T)), M.mod{M.i_mod.ModMembrane}.var.n_coord]);
     for iF=1:nF
         if dyn.iFon(iF)==true
-        [M.TypForce] = M.TypForce.(Fname{iF})(M); %compute each required force
+            updateForceOnly=true;
+            imForceMod=nan;
+            for im=1:M.n_mod
+            if (dyn.updateModForce(im)==true) && (strcmp(M.name{im},Fname{iF})==true)
+                updateForceOnly=false;
+                imForceMod=im;
+                break;
+            end
+            end
+            if updateForceOnly==true
+               [M.TypForce] = M.TypForce.(Fname{iF})(M); %compute each required force
+            else
+               [M.TypForce,M.mod{M.i_mod.(M.name{imForceMod})}] = M.TypForce.(Fname{iF})(M); %compute single modular force and update the module  
+            end
         Vrec.(Fname{iF})(iS)=M.TypForce.int_V.(Fname{iF}); %record each potential energy
         end
     end
@@ -77,6 +92,24 @@ for iS=1:nS
         end
     end
     %----------------------------------------------------------------------
+    for im=1:M.n_mod
+        if dyn.needFollow(im)==true
+            nameV=M.mod{M.i_mod.(M.name{im})}.var.follow.nameV;
+            nameIdNeighbor=M.mod{M.i_mod.(M.name{im})}.var.follow.nameIdNeighbor;
+            idModFollower=M.mod{M.i_mod.(M.name{im})}.var.follow.idModFollower;
+            idModFollowee=M.mod{M.i_mod.(M.name{im})}.var.follow.idModFollowee;
+%             if iS==1
+%                 updateTem=false;
+%             elseif breakOff==true
+%                 updateTem=false;
+%             else
+%                 updateTem=true;
+%             end
+            updateTem=false;
+            [M,ftot] = dyn.follow(M,nameV,nameIdNeighbor,idModFollower,idModFollowee,ftot,'update',updateTem);
+        end
+    end
+    %----------------------------------------------------------------------
     dt=dyn.pm.dt_const;
     for im=1:M.n_mod
         if ~isempty(dyn.matchFtoMod{im})
@@ -98,14 +131,13 @@ for iS=1:nS
                 dt=varDt;
             end
         elseif dyn.dynTyp(im)==1 %rotation---------------------------------
-            [varDt,daBYdtRot{im},drBYdtRot{im}] = dynamics.rotationDt(M.mod{M.i_mod.ModClathrin},ftot{im},dt,0,'sMax',sMax);
+            [varDt,daBYdtRot{im},drBYdtRot{im}] = dynamics.rotationDt(M.mod{M.i_mod.(M.name{im})},ftot{im},dt,0,'sMax',sMax);
             if varDt<dt
                 dt=varDt;
             end
         end
         end 
     end
-    %----------------------------------------------------------------------
     for im=1:M.n_mod
         if ~isempty(dyn.matchFtoMod{im})
         if dyn.dynTyp(im)==0 %Langevin-------------------------------------
@@ -116,8 +148,24 @@ for iS=1:nS
                                                                 'da',daBYdtRot{im},'dr',drBYdtRot{im});
         end
         end
+    end
+    %----------------------------------------------------------------------
+    breakOff=false;
+    for im=1:M.n_mod
         if dyn.needBreakOff(im)==true
-            [M] = dyn.(['breakOff_' M.name{im}])(M);
+%             edgSave=M.mod{M.i_mod.(M.name{im})}.var.edge_all;
+%             coordSave=M.mod{M.i_mod.(M.name{im})}.var.coord;
+%             [~,m,~] = ModMembrane(M.TypForce,M);
+            [M,breakOffInfo] = dyn.(['breakOff_' M.name{im}])(M);
+            if breakOffInfo.breakOff==true
+                breakOff=true;
+            end
+%             if breakOffInfo.breakOff==true
+%                 nTem=numel(breakOffInfo.id);
+%                 kHtem=[m.var.f.kH(edgSave(breakOffInfo.id,1)),m.var.f.kH(edgSave(breakOffInfo.id,2))];
+%                 coordTem=[coordSave(edgSave(breakOffInfo.id,1),:),coordSave(edgSave(breakOffInfo.id,2),:)];
+%                 CutOff.dataStored=[CutOff.dataStored;[iS*ones(nTem,1),breakOffInfo.id,kHtem,coordTem]];
+%             end
         end  
     end
     %----------------------------------------------------------------------

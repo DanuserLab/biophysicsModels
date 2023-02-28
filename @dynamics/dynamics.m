@@ -14,7 +14,9 @@ classdef dynamics
         i_step %current simulation step
         update
         dynTyp %0: Langevin only; 1: rotation; -1: fixed
+        needFollow % a module following another module
         matchFtoMod %-1: no match found; 0: single force; >0: col number of F assigned to a mod
+        updateModForce %-true: compute force also update mod
         ifVarDt
         iFon %compute only the forces needed and skip other forces
         needBreakOff %idicate whether a module needs break off function to stop within dynamics loops
@@ -39,14 +41,12 @@ classdef dynamics
             obj.update=true;
         end
 %==========================================================================
-        [mod,loc_relaxed,abnormal_length] = loop_ModMembrane_bound(dyn,mod,varargin);
         [dyn] = get_dt(dyn,varargin);
-        [mod,dyn,abnormal_length] = loop_dynamin(dyn,mod,varargin);
         [dyn] = Preparation(dyn,mod,Fname,varargin);
         [mod,CutOff] = TimeEval(dyn,mod,Fname,varargin);
 %========================================================================== break off functions    
-        [mod,breakOff] = breakOff_ModMembrane(dyn,mod,varargin);
-        [mod,breakOff] = breakOff_ModClathrin(dyn,mod,varargin);
+        [mod,breakOffInfo] = breakOff_ModMembrane(dyn,mod,varargin);
+        [mod,breakOffInfo] = breakOff_ModClathrin(dyn,mod,varargin);
 %==========================================================================
     end
 %==========================================================================
@@ -54,6 +54,7 @@ classdef dynamics
        [coord,dt] = translation(coord,force,mu,dt,varargin);
        [obj,dt] = rotation(obj,force,dt,kBT,varargin);
        [dt,da,dr] = rotationDt(obj,force,dt,kBT,varargin);
+       [M,ftot] = follow(M,nameV,nameIdNeighbor,idModFollower,idModFollowee,ftot,varargin);
     end
 end
 

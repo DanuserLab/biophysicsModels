@@ -167,7 +167,7 @@ classdef model
             for i=1:obj.n_mod
                 obj.mod{i} = varargin{idx(i)};
                 obj.name{i}=class(obj.mod{i});
-            end
+            end          
 %--------------------------------------------------------------------------            
             field_tem = cell(0,0);
             for i=1:obj.n_mod
@@ -219,7 +219,14 @@ classdef model
                     obj.i_coord(i+1,1)=n_tem+1;
                 end
             end
-%-------------------------------------------------------------------------- 
+%--------------------------------------------------------------------------       
+            for im=1:obj.n_mod
+                for ip=1:numel(obj.mod{im}.prop)
+                    if strcmp(obj.mod{im}.prop{ip},'needAddInit')
+                        obj=obj.(['addInit_' obj.name{im}]);
+                    end
+                end
+            end  
 %--------------------------------------------------------------------------
 %             obj.chemistry=chemistry(obj);
 %             obj.force=force(obj);
@@ -228,7 +235,8 @@ classdef model
 %--------------------------------------------------------------------------          
         end
 %==========================================================================        
-        [f] = plot(obj,varargin)
+        [f] = plot(obj,varargin);
+        [obj] = addInit_ModBrownianMotor(obj,varargin);
     end
 %==========================================================================
 %==========================================================================  

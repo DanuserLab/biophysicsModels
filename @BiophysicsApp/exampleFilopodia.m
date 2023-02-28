@@ -22,7 +22,7 @@ ip.addParameter('xyzLim', [-15 15;-15 15;-15 15], @isnumeric); %figure axis rang
 ip.addParameter('viewAng', [-50 10], @isnumeric); %figure view angle
 ip.parse(dirRoot,dirMod,varargin{:});
 % dirRoot = '/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Filopodia';
-% dirMod='/home2/s171152/codes/matlab/mine/git/module/module';addpath(dirMod);
+% dirMod='/home2/s171152/codes/matlab/mine/git/DanuserLab/biophysicsmodels';addpath(dirMod);
 %--------------------------------------------------------------------------
 nStep=ip.Results.nStep;
 nRep=ip.Results.nRep;
@@ -67,7 +67,7 @@ for iPar=1:nPar
     dirPar{iPar}=rec.dir_all{iPar};
 end
 %--------------------------------------------------------------------------
-%dynamics
+%% dynamics
 fprintf('computing filopodia morphology...\n');
 parfor iPar=1:nPar
 % for iPar=1:1    

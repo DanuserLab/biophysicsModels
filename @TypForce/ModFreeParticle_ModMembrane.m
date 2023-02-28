@@ -1,22 +1,21 @@
-function [f,V_tot] = ModFreeParticle_ModMembrane(f,mod,varargin)
+function [f,V_tot] = ModFreeParticle_ModMembrane(f,M,varargin)
 
 ip = inputParser;
 ip.CaseSensitive = false;
 ip.addRequired('f', @(x) isa(x,'TypForce'));
-ip.addRequired('mod', @(x) isa(x,'model'));
-ip.addParameter('idClathrinSub', [], @isnumeric);
-ip.parse(f,mod,varargin{:}); 
+ip.addRequired('M', @(x) isa(x,'model'));
+ip.parse(f,M,varargin{:}); 
 %----------------------------------------------------------------------------------------
-            i_mod=[mod.i_mod.ModFreeParticle,mod.i_mod.ModMembrane];  %1: AP2 as free particle; 2: ModMembrane
+            i_mod=[M.i_mod.ModFreeParticle,M.i_mod.ModMembrane];  %1: AP2 as free particle; 2: ModMembrane
 %----------------------------------------------------------------------------------------
-mod.mod{mod.i_mod.ModFreeParticle}.var.idMesh = ...
-ComMath.getMeshID(mod.mod{mod.i_mod.ModFreeParticle}.var.coord,mod.Mesh.coord, mod.Mesh.range,mod.Mesh.d);
-mod.mod{mod.i_mod.ModMembrane}.var.idMesh = ...
-ComMath.getMeshID(mod.mod{mod.i_mod.ModMembrane}.var.coord,mod.Mesh.coord, mod.Mesh.range,mod.Mesh.d);
+M.mod{M.i_mod.ModFreeParticle}.var.idMesh = ...
+ComMath.getMeshID(M.mod{M.i_mod.ModFreeParticle}.var.coord,M.Mesh.coord, M.Mesh.range,M.Mesh.d);
+M.mod{M.i_mod.ModMembrane}.var.idMesh = ...
+ComMath.getMeshID(M.mod{M.i_mod.ModMembrane}.var.coord,M.Mesh.coord, M.Mesh.range,M.Mesh.d);
 %----------------------------------------------------------------------------------------
-idMeshFreeParticle=mod.mod{mod.i_mod.ModFreeParticle}.var.idMesh';
+idMeshFreeParticle=M.mod{M.i_mod.ModFreeParticle}.var.idMesh';
 
-[idMeshMembrane] = ComMath.getMeshIDNeighbor(mod.mod{mod.i_mod.ModMembrane}.var.idMesh',mod.Mesh.range);
+[idMeshMembrane] = ComMath.getMeshIDNeighbor(M.mod{M.i_mod.ModMembrane}.var.idMesh',M.Mesh.range);
 
 idMembrane=[];
 idFreeParticle=[];
@@ -29,8 +28,8 @@ idFreeParticle=[idFreeParticle;idFreeParticleTem];
 end
 
 f.int_comp.ModFreeParticle_ModMembrane=cell(2,1);
-f.int_comp.ModFreeParticle_ModMembrane{1}=zeros(mod.mod{i_mod(1)}.var.n_coord,3);
-f.int_comp.ModFreeParticle_ModMembrane{2}=zeros(mod.mod{i_mod(2)}.var.n_coord,3);
+f.int_comp.ModFreeParticle_ModMembrane{1}=zeros(M.mod{i_mod(1)}.var.n_coord,3);
+f.int_comp.ModFreeParticle_ModMembrane{2}=zeros(M.mod{i_mod(2)}.var.n_coord,3);
 
 nPair=numel(idMembrane);
 Vpair=zeros(nPair,1);
@@ -38,9 +37,9 @@ Fpair=zeros(nPair,3);
 
 for iPair=1:nPair
    Vpair(iPair)=0.5*f.pm.k_ModFreeParticle_ModMembrane*...
-          sum((mod.mod{mod.i_mod.ModMembrane}.var.coord(idMembrane(iPair),:)-mod.mod{mod.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)).^2,2);
-   Fpair(iPair,:) = -f.pm.k_ModFreeParticle_ModMembrane*(mod.mod{mod.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)-...
-                                                       mod.mod{mod.i_mod.ModMembrane}.var.coord(idMembrane(iPair),:));%force on ModFreeParticle 
+          sum((M.mod{M.i_mod.ModMembrane}.var.coord(idMembrane(iPair),:)-M.mod{M.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)).^2,2);
+   Fpair(iPair,:) = -f.pm.k_ModFreeParticle_ModMembrane*(M.mod{M.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)-...
+                                                       M.mod{M.i_mod.ModMembrane}.var.coord(idMembrane(iPair),:));%force on ModFreeParticle 
 end
 
 [Cunq,~,iCunq]=unique(idFreeParticle,'row');
@@ -59,16 +58,20 @@ for iPair=1:nPair
 end
 for iUnq=1:Nunq
     iPair=idMin(iUnq);
+%     FdotU=dot(Fpair(iPair,:),M.mod{M.i_mod.ModMembrane}.var.f.u_K(idMembrane(iPair),:),2);  
+%     Fpair(iPair,:)=FdotU*M.mod{M.i_mod.ModMembrane}.var.f.u_K(idMembrane(iPair),:);
     f.int_comp.ModFreeParticle_ModMembrane{1}(idFreeParticle(iPair),:)=Fpair(iPair,:);
     f.int_comp.ModFreeParticle_ModMembrane{2}(idMembrane(iPair),:)=-Fpair(iPair,:);
 end
 %taking 1-ring average
 f_tem=zeros(size(f.int_comp.ModFreeParticle_ModMembrane{2}));
-for i=1:mod.mod{mod.i_mod.ModMembrane}.var.n_coord
-    n_node=mod.mod{mod.i_mod.ModMembrane}.var.n_node(i);
-    f_tem(i,:)=mean(f.int_comp.ModFreeParticle_ModMembrane{2}(mod.mod{mod.i_mod.ModMembrane}.var.j_T(i,1:n_node),:));
+for i=1:M.mod{M.i_mod.ModMembrane}.var.n_coord
+    n_node=M.mod{M.i_mod.ModMembrane}.var.n_node(i);
+    f_tem(i,:)=mean(f.int_comp.ModFreeParticle_ModMembrane{2}(M.mod{M.i_mod.ModMembrane}.var.j_T(i,1:n_node),:));
 end
 f.int_comp.ModFreeParticle_ModMembrane{2}=f_tem;
+%projecting to normal of membrane
+
 V_tot=sum(Vunq);
 f.int_V.ModFreeParticle_ModMembrane=V_tot;
 f.int_tot.ModFreeParticle_ModMembrane=f.int_comp.ModFreeParticle_ModMembrane;
@@ -94,5 +97,3 @@ f.int_tot.ModFreeParticle_ModMembrane=f.int_comp.ModFreeParticle_ModMembrane;
 %            xlim(x_lim);ylim(x_lim);zlim(x_lim);
 %--------------------------------------------------------------------------
 end
-
-

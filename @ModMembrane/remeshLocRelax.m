@@ -140,7 +140,7 @@ if ~isempty(id_int)
     M.mod{i_mod}.var.id_bound=[M.mod{i_mod}.var.id_bound;id_int];
 end
 %%
-[loc_relaxed,M.mod{i_mod}] = locDyn(M.mod{i_mod},M.TypForce,'edg_exo',edg_exo,'nt',ip.Results.n_step,'local',local);
+[loc_relaxed,M.mod{i_mod}] = locDyn(M.mod{i_mod},M.TypForce,'edg_exo',edg_exo,'nt',ip.Results.n_step,'local',local,'D',M.mod{i_mod}.pm.DlocRelax);
 
 M.mod{i_mod}.var.id_on_edg=id_on_edg_save;
 M.mod{i_mod}.var.n_on_edg=n_on_edg_save;

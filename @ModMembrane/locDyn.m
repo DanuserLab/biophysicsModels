@@ -23,8 +23,9 @@ ip.addParameter('edg_exo', [], @isnumeric);%for extending or merging the one edg
 ip.addParameter('D', 10, @isnumeric);
 ip.addParameter('D2', 1000, @isnumeric);
 ip.addParameter('sMax', 0.1, @isnumeric);
-ip.addParameter('dt', 1e-3, @isnumeric);
-ip.addParameter('nt', 100, @isnumeric);
+ip.addParameter('dt', 1e-3, @isnumeric); %1e-3
+ip.addParameter('nt', 10000, @isnumeric);
+ip.addParameter('mu', 1000, @isnumeric);
 ip.addParameter('plot_or_not', false, @islogical);
 ip.parse(m,f,varargin{:});
 %----------------------------------------------------------------------------------------
@@ -37,12 +38,9 @@ mex_avail=ip.Results.mex_avail;
 local=ip.Results.local;
 D=ip.Results.D;
 plot_or_not=ip.Results.plot_or_not;
+mu=ip.Results.mu;
 %----------------------------------------------------------------------------------------
-if m.pm.remeshScheme==0
-    Vpm=m.pm.Vdw;
-else
-    Vpm=m.pm.Vdh;
-end
+Vpm=m.pm.Vdh;
 %----------------------------------------------------------------------------------------
 if mex_avail == false
 %----------------------------------------------------------------------------------------
@@ -173,7 +171,7 @@ else
     rmSeed=floor(rand(1,1)*1000+0.5);
     
 %     pmc=[sMax,dt,nt,i_shift,m.pm.dr,Non,Vpm.rl_min,Vpm.rl_max,local,D,m.pm.mu,Vpm.rd_min,m.pm.Vdw.rs_max,rmSeed];
-    pmc=[sMax,dt,nt,i_shift,m.pm.dr,Non,Vpm.r_best_min,Vpm.r_best_max,local,D,m.pm.mu,Vpm.rd_min,m.pm.Vdh.rs_max,rmSeed];
+    pmc=[sMax,dt,nt,i_shift,m.pm.dr,Non,Vpm.r_best_min,Vpm.r_best_max,local,D,mu,Vpm.rd_min,m.pm.Vdh.rs_max,rmSeed];%XXX
     %----------------------------------------------------------------------
     %%
     if plot_or_not==true

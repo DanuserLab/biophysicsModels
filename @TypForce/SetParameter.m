@@ -15,7 +15,7 @@ ip.addParameter('k_ModMembrane_ModSubstrate', 1, @isnumeric);
 ip.addParameter('k_ModClathrin_ModMembrane', 10, @isnumeric);
 ip.addParameter('k_ModClathrin', [200 2000], @isnumeric);
 ip.addParameter('k_ModClathrin_ModMemAdapter_ModMembrane', 10, @isnumeric);
-ip.addParameter('k_ModClathrin_ModFreeParticle', 1, @isnumeric);
+ip.addParameter('k_ModClathrin_ModFreeParticle', 10, @isnumeric);
 ip.addParameter('k_ModFreeParticle_ModMembrane', 1, @isnumeric);
 ip.parse(obj, varargin{:});
 %--------------------------------------------------------------------------------------------------------

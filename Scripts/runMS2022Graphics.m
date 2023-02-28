@@ -10,14 +10,14 @@
         % date: 2022/07/25
 %==========================================================================
 %% add library
-dirMod='/home2/s171152/codes/matlab/mine/git/module/module'; 
-addpath(dirMod);
+dirMod='/home2/s171152/codes/matlab/mine/git/DanuserLab/biophysicsmodels'; 
+addpath(genpath(dirMod));
 %% ==========================================================================
 % Graphics
 %==========================================================================
 % Adjust figures and make a movie in a given directory
 %% 1.Red blood cell
-dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig3_RBC/fig/rep09';
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig3_RBC/fig/rep01';
 myDir=dir(dirFig);
 nDir=numel(myDir);
 %adjust every figure nicely
@@ -29,7 +29,7 @@ for i=3:nDir
         A=gca;
         A.Children(5).LineWidth=0.5; A.Children(5).EdgeColor=[0 1 1];
         A.XTick=(-10:5:10); A.YTick=(-10:5:10); A.ZTick=(-10:5:10);
-        view([40 -25]);
+        view([16 47]);
         material shiny;
         ComRecord.savePlot(dirFig,myDir(i).name(1:end-4),'figH',gcf,'PaperPosition', [0 0 5 5]);
         close(gcf);
@@ -45,7 +45,7 @@ for i=nDir-1:nDir
     end
 end
 %% 2.Vesicle Fussion
-dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig3_fussion/fig/rep08';
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig3_fussion/fig/rep01';
 myDir=dir(dirFig);
 nDir=numel(myDir);
 %adjust every figure nicely
@@ -92,7 +92,7 @@ for i=nDir-1:nDir
 end
 close(gcf);
 %% 3.Filopodia
-dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Filopodia/fig/rep07';
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Filopodia/fig/rep03';
 myDir=dir(dirFig);
 nDir=numel(myDir);
 %adjust every figure nicely
@@ -121,7 +121,7 @@ for i=nDir-1:nDir
 end
 close(gcf);
 %% 4.Lamellipodia
-dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Lamellipodia/fig/rep03';
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Lamellipodia/fig/rep08';
 myDir=dir(dirFig);
 nDir=numel(myDir);
 %adjust every figure nicely
@@ -150,7 +150,7 @@ for i=nDir-1:nDir
 end
 close(gcf);
 %% 5.Endocytosis
-dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Endocytosis/fig/rep02';
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig4_Endocytosis/fig/rep01';
 myDir=dir(dirFig);
 nDir=numel(myDir);
 %adjust every figure nicely
@@ -250,7 +250,7 @@ for i=nDir-1:nDir
     end
 end
 close(gcf);
-for i=3:4
+for i=5:6
     if strcmp(myDir(i).name(end-2:end),'fig')
         open([myDir(i).folder filesep myDir(i).name]);
         ComRecord.savePlot([dirFig filesep 'Large'],[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 8]);
@@ -258,10 +258,10 @@ for i=3:4
 end
 close(gcf);
 %tether pulling: diffusion barrier
-dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig5/fig/p10_rep1';
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/Fig5/fig/p10_rep6';
 myDir=dir(dirFig);
 nDir=numel(myDir);
-dirData='/endosome/work/bioinformatics/s171152/data/membrane/Fig5/data/p10_rep1';
+dirData='/endosome/work/bioinformatics/s171152/data/membrane/Fig5/data/p10_rep6';
 myDirData=dir(dirData);
 nDirData=numel(myDirData);
 %adjust every figure nicely
@@ -424,3 +424,101 @@ for i=3:nDir
     end
     end
 end
+%% 7.Remeshing test
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/FigS3_SupTest/CS/fig/rep02';
+myDir=dir(dirFig);
+nDir=numel(myDir);
+%adjust every figure nicely
+xyzLim=[-5 11;-8 8;-8 8];
+for i=3:nDir
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        xlim(xyzLim(1,:));ylim(xyzLim(2,:));zlim(xyzLim(3,:));
+        A=gca;
+        A.Children(end).FaceAlpha=0.25;
+%         A.Children(7).LineWidth=0.1; A.Children(7).EdgeColor=[0 1 1];
+        A.Children(end).LineStyle='none';
+        A.XTick=(-5:5:10); A.YTick=(-5:5:5); A.ZTick=(-5:5:5);
+        view([15 12]);
+        material shiny;
+        ComRecord.savePlot(dirFig,myDir(i).name(1:end-4),'figH',gcf,'PaperPosition', [0 0 7.5 5],'OuterPosition', [0 0 7.5 5]);
+        close(gcf);
+    end
+end
+%make a gif movie
+ComRecord.makeStackMov(dirFig,'DelayTime',0.2,'dt',0.005,'n_file',40,'view_ang',[],'xyzLim',xyzLim,'PaperPosition', [0 0 7.5 5],'OuterPosition', [0 0 7.5 5]);
+%make the 1st, 2nd and last figure larger
+myDir=dir(dirFig);
+for i=3:4
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        ComRecord.savePlot(dirFig,[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 5.33],'OuterPosition',[0 0 8 5.33]);
+    end
+end
+close(gcf);
+myDir=dir(dirFig);
+for i=7:8
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        ComRecord.savePlot(dirFig,[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 5.33],'OuterPosition',[0 0 8 5.33]);
+    end
+end
+close(gcf);
+myDir=dir(dirFig);
+nDir=numel(myDir);
+for i=nDir-1:nDir
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        ComRecord.savePlot(dirFig,[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 5.33],'OuterPosition',[0 0 8 5.33]);
+    end
+end
+close(gcf);
+
+dirFig='/endosome/work/bioinformatics/s171152/data/membrane/FigS3_SupTest/ORG/fig/rep01';
+myDir=dir(dirFig);
+nDir=numel(myDir);
+%adjust every figure nicely
+xyzLim=[-5 11;-8 8;-8 8];
+for i=3:nDir
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        xlim(xyzLim(1,:));ylim(xyzLim(2,:));zlim(xyzLim(3,:));
+        A=gca;
+        A.Children(end).FaceAlpha=0.25;
+%         A.Children(7).LineWidth=0.1; A.Children(7).EdgeColor=[0 1 1];
+        A.Children(end).LineStyle='none';
+        A.XTick=(-5:5:10); A.YTick=(-5:5:5); A.ZTick=(-5:5:5);
+        view([15 12]);
+        material shiny;
+        ComRecord.savePlot(dirFig,myDir(i).name(1:end-4),'figH',gcf,'PaperPosition', [0 0 7.5 5],'OuterPosition', [0 0 7.5 5]);
+        close(gcf);
+    end
+end
+%make a gif movie
+ComRecord.makeStackMov(dirFig,'DelayTime',0.2,'dt',0.005,'n_file',40,'view_ang',[],'xyzLim',xyzLim,'PaperPosition', [0 0 7.5 5],'OuterPosition', [0 0 7.5 5]);
+%make the 1st, 2nd and last figure larger
+myDir=dir(dirFig);
+for i=3:4
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        ComRecord.savePlot(dirFig,[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 5.33],'OuterPosition',[0 0 8 5.33]);
+    end
+end
+close(gcf);
+myDir=dir(dirFig);
+for i=7:8
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        ComRecord.savePlot(dirFig,[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 5.33],'OuterPosition',[0 0 8 5.33]);
+    end
+end
+close(gcf);
+myDir=dir(dirFig);
+nDir=numel(myDir);
+for i=nDir-1:nDir
+    if strcmp(myDir(i).name(end-2:end),'fig')
+        open([myDir(i).folder filesep myDir(i).name]);
+        ComRecord.savePlot(dirFig,[myDir(i).name(1:end-4) 'LARGE'],'figH',gcf,'PaperPosition', [0 0 8 5.33],'OuterPosition',[0 0 8 5.33]);
+    end
+end
+close(gcf);

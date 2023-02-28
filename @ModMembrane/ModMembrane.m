@@ -30,7 +30,7 @@ classdef ModMembrane
         % n_adp - number of adapters, currently not applied, usually = 0
         % optional:
         % see variable arguments
-        %   See also remeshFlip, remeshSplitMerge
+        %   See also SetParameter, SetVar
         % Author: Xinxin Wang, Danuser Lab
         % email: wangxinxin8627@gmail.com
         % date: 2022/07/24
@@ -49,12 +49,12 @@ classdef ModMembrane
             case_non_close=ip.Results.case_non_close;
             unit=ip.Results.unit;
             if isempty(unit)
-                unit=nat_unit('erg',ComUnit.nm_to_cm(1),300);
-                warning('no unit assigned, using 1nm and 300K as natural units')
+                unit=ComUnit('erg',ComUnit.nm_to_cm(1),300,ComUnit.kBT_to_erg(1,300)); 
+                warning('no unit assigned, using 1nm, 1kBT and 300K as natural units');
             end
 %--------------------------------------------------------------------------
             if ip.Results.update==false
-            obj.prop = {'Particle','varDt','needBreakOff'};
+            obj.prop = {'Particle','varDt','needBreakOff','forceRelateMod'};
             obj.failInfo='';
             [obj] = SetParameter(obj,'close_surf',close_surf,'n_ico_sphere',n_ico_sphere,'unit',unit);
             if close_surf==true
@@ -230,6 +230,9 @@ classdef ModMembrane
         [M,loc_relaxed] = remeshLocRelax(m,M,edg_add, varargin);
         [id_ring_ver1,id_ring_edg1,id_ring_ver2,id_ring_edg2] = remeshRing(m,edge_ctr, varargin);
         [split,merge] = remeshSplitMerge(m,M,id_split,id_merge,varargin);
+        [m,remeshed] = remeshFlipOpt(m,j,i_edg,varargin);
+        [m,remeshed,edg_add] = remeshSplitOpt(m,j,k,id_ring_edg,edg_add_org,i_edg,rLim,varargin);
+        [m,remeshed] = remeshMergeOpt(m,j,k,id_ring_edg,edg_add_org,i_edg,rLim,varargin);
     end
 %==========================================================================
 %==========================================================================    

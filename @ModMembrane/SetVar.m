@@ -5,14 +5,14 @@ function [obj] = SetVar(obj, varargin)
         % obj - a @ModMembrane object
         % optional:
         % see variable arguments
-        %   See also getUface
+        %   See also SetParameter
         % Author: Xinxin Wang, Danuser Lab
         % email: wangxinxin8627@gmail.com
         % date: 2022/07/19
 %--------------------------------------------------------------------------   
 ip = inputParser;
 ip.CaseSensitive = false;
-ip.addRequired('obj', @(x) isobject(x));
+ip.addRequired('obj', @(x) isa(x,'ModMembrane'));
 ip.addParameter('update', false, @islogical);
 ip.addParameter('coord', [], @isnumeric);
 ip.addParameter('face', [], @isnumeric);
@@ -187,6 +187,16 @@ if update==false
 end
 obj.var=var;
 [obj] = getUface(obj);
+%--------------------------------------------------------------------------
+% if obj.pm.remeshScheme==1
+% for i=1:numel(obj.prop)
+%     if strcmp(obj.prop{i},'varDt')==true
+%         obj.prop(i)=[];
+%         break;
+%     end
+% end
+% end
+%--------------------------------------------------------------------------
 end
 %==========================================================================
 function [j_T] = comp_j_T(var,pm)

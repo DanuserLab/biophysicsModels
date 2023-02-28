@@ -24,7 +24,6 @@ ip.addRequired('ver_new', @(x) isnumeric(x));
 ip.addRequired('edge_all_new', @(x) isnumeric(x));
 ip.addRequired('face_new', @(x) isnumeric(x));
 ip.addParameter('var_old', [], @isstruct);
-ip.addParameter('id_merge', [], @isnumeric);
 ip.addParameter('dens', [], @isnumeric);
 ip.parse(pm, var,ver_new, edge_all_new,face_new,varargin{:});
 %--------------------------------------------------------------------------------------------------------
@@ -39,18 +38,6 @@ ip.parse(pm, var,ver_new, edge_all_new,face_new,varargin{:});
      end
      var.dens=dens;
      var.n_coord = n_new;
-     if n_old <= n_new
-         is_merge=false;
-     elseif n_old > n_new
-         is_merge=true;
-         if isempty(ip.Results.id_merge)
-             error('id_merge is needed for merging');
-         end
-     else
-         
-%      elseif pm.remeshScheme>0
-%          error('n_coord is not changed');
-     end
      var.face_unq = face_new;
      var.face = nan(pm.n_val_max,3,var.n_coord);
      var.val = zeros(var.n_coord,1);
@@ -115,13 +102,6 @@ end
      end
      else
      end
-%==========================================================================
-   if is_merge==true
-       id_tem=var.id_adp==ip.Results.id_merge(2);
-       var.id_adp(id_tem)=ip.Results.id_merge(1);
-       id_tem=var.id_adp>ip.Results.id_merge(2);
-       var.id_adp(id_tem)=var.id_adp(id_tem)-1;
-   end
 %==========================================================================
 end
 %==========================================================================

@@ -1,14 +1,14 @@
-function [f,abnormal_length,m,Vtot] = ModMembrane(f,mod,varargin)
+function [f,m,Vtot] = ModMembrane(f,mod,varargin)
 %--------------------------------------------------------------------------
         % ModMembrane performs the computation of the forces involved in
-        % @ModeMembrane, including bending force, internal force, pressure
+        % @ModMembrane, including bending force, internal force, pressure
         % force and tension force
         % input: 
         % f - @TypForce
         % mod - @model object
         % output:
         % abnormal_length - whether too long or too short edge appear
-        % m - @ModeMembrane object with updated force data
+        % m - @ModMembrane object with updated force data
         % Vtot - total potential value of m
         % optional:
         % see variable arguments
@@ -31,51 +31,57 @@ m=mod.mod{mod.i_mod.ModMembrane};
 %----------------------------------------------------------------------------------------
 mex_avail=true;
 %----------------------------------------------------------------------------------------
+Vpm=m.pm.Vdh;
+Vname='VinMembrane2hill';
+%----------------------------------------------------------------------------------------
+% new method (generalized constant force)
+Mname='ModMembrane';
 if isempty(f.int_stored.ModMembrane)
-    f.int_stored.ModMembrane = ModMembrane8Const(f,m);
+    %define parameters for double hill potential
+    Vin_pm(1)=Vpm.V0;
+    Vin_pm(2)=Vpm.r_1;Vin_pm(3)=Vpm.r_2;
+    Vin_pm(4)=Vpm.k_w;
+    Vin_pm(5)=Vpm.e_b1;Vin_pm(6)=Vpm.e_b2;
+    Vin_pm(7)=Vpm.e_w;
+    Vin_pm(8)=Vpm.k_b11; Vin_pm(9)=Vpm.k_b12; Vin_pm(10)=Vpm.k_b21;Vin_pm(11)=Vpm.k_b22;
+    Vin_pm(12)=Vpm.rb_11;Vin_pm(13)=Vpm.rb_12;Vin_pm(14)=Vpm.rb_21;Vin_pm(15)=Vpm.rb_22;
+    f=storedForce(f,Vname,Vin_pm,Mname,[Vpm.r_1 m.pm.dr Vpm.r_2],'rsq_std', m.pm.f_const_rsq_std,'std_std', m.pm.f_const_std_std);
 end
-%----------------------------------------------------------------------------------------
-if m.pm.remeshScheme==0
-    Vpm=m.pm.Vdw;
-else
-    Vpm=m.pm.Vdh;
-end
-%----------------------------------------------------------------------------------------
-d = (m.var.coord(m.var.edge_all(m.var.id_on_edg,2),:) - m.var.coord(m.var.edge_all(m.var.id_on_edg,1),:));
-r = sqrt(sum(d.^2,2));
-u = d./r;
-i_shift=f.int_stored.ModMembrane.rn(1)/m.pm.dr-1;
-i = floor(r/m.pm.dr+0.5)-i_shift;
+idPair=m.var.edge_all(m.var.id_on_edg,:);
+idCoord=m.var.id_on_coord;
+[f,Vtot] = constForce(f,Mname,m,idPair,idCoord);
+abnormal_length=nan; %no need for abnormal_length
 
-f_edg=f.int_stored.ModMembrane.fn(i).*u;
-f.int_const.ModMembrane=zeros(m.var.n_coord,3);
-Vtot=sum(f.int_stored.ModMembrane.Vn(i));
-for i_coord = 1:numel(m.var.id_on_coord)
-    f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:) = f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:)-sum(f_edg(m.var.edge_all(m.var.id_on_edg,1)==m.var.id_on_coord(i_coord),:),1);
-    f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:) = f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:)+sum(f_edg(m.var.edge_all(m.var.id_on_edg,2)==m.var.id_on_coord(i_coord),:),1);
-end
+%old method
+% if isempty(f.int_stored.ModMembrane)
+% %     f.int_stored.ModMembrane = ModMembrane8Const(f,m);
+% end
+% d = (m.var.coord(m.var.edge_all(m.var.id_on_edg,2),:) - m.var.coord(m.var.edge_all(m.var.id_on_edg,1),:));
+% r = sqrt(sum(d.^2,2));
+% u = d./r;
+% i_shift=f.int_stored.ModMembrane.rn(1)/m.pm.dr-1;
+% i = floor(r/m.pm.dr+0.5)-i_shift;
+% 
+% f_edg=f.int_stored.ModMembrane.fn(i).*u;
+% f.int_const.ModMembrane=zeros(m.var.n_coord,3);
+% Vtot=sum(f.int_stored.ModMembrane.Vn(i));
+% for i_coord = 1:numel(m.var.id_on_coord)
+%     f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:) = f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:)-sum(f_edg(m.var.edge_all(m.var.id_on_edg,1)==m.var.id_on_coord(i_coord),:),1);
+%     f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:) = f.int_const.ModMembrane(m.var.id_on_coord(i_coord),:)+sum(f_edg(m.var.edge_all(m.var.id_on_edg,2)==m.var.id_on_coord(i_coord),:),1);
+% end
 %----------------------------------------------------------------------------------------
-if m.pm.remeshScheme==0
-    id_tem1 = r>Vpm.rl_max; 
-    n_tem1 = length(id_tem1(id_tem1));
-    if (n_tem1 == 0) 
-    abnormal_length=false;
-    else
-    abnormal_length=true;
-    end
-else
-id_tem1 = r<Vpm.rl_min;  id_tem2 = r>Vpm.rl_max; 
-n_tem1 = length(id_tem1(id_tem1));
-n_tem2 = length(id_tem2(id_tem2));
-if (n_tem1 == 0) && (n_tem2 == 0)
-    abnormal_length=false;
-else
-    abnormal_length=true;
-end
-end
+% id_tem1 = r<Vpm.rl_min;  id_tem2 = r>Vpm.rl_max; 
+% n_tem1 = length(id_tem1(id_tem1));
+% n_tem2 = length(id_tem2(id_tem2));
+% if (n_tem1 == 0) && (n_tem2 == 0)
+%     abnormal_length=false;
+% else
+%     abnormal_length=true;
+% end
 %----------------------------------------------------------------------------------------
 %----------------------------------------------------------------------------------------
-f.int_rand.ModMembrane = randn(m.var.n_coord,3)*sqrt(2*m.pm.mu*m.pm.kBT*m.pm.dt)/m.pm.dt/m.pm.mu;
+% f.int_rand.ModMembrane = randn(m.var.n_coord,3)*sqrt(2*m.pm.mu*m.pm.kBT*m.pm.dt)/m.pm.dt/m.pm.mu; %XXX
+f.int_rand.ModMembrane = zeros(m.var.n_coord,3);
 
 if mex_avail == false
 %%
@@ -133,8 +139,10 @@ else
     pmc(12) = m.pm.k_a;
        
     j_T = m.var.j_T; j_T(isnan(j_T)) = 0;
-
-    [f_b,f_p,u_K,kH,f_AV,V_A_Vol]=Mex.ModMembrane...
+    
+%     V_A_Vol: V, membrane free energy, A, Area, Vol, volume
+    if m.pm.GaussianCurv==false
+       [f_b,f_p,u_K,kH,f_AV,V_A_Vol]=f.ModMembraneMex...
        (m.var.coord,...
         pmc,...
         m.var.edge_all,...
@@ -145,6 +153,19 @@ else
         m.var.T_s',...
         m.var.T_e',...
         m.var.dens);
+    else
+       [f_b,f_p,u_K,kH,f_AV,V_A_Vol]=f.ModMembraneAltMex...
+       (m.var.coord,...
+        pmc,...
+        m.var.edge_all,...
+        m.var.face_unq,...
+        j_T,...
+        m.var.id_on_coord,...
+        m.var.n_node',...
+        m.var.T_s',...
+        m.var.T_e',...
+        m.var.dens);
+    end
     %%
 %     fig=figure('units','normalized','outerposition',[0 0 1 1]);
 %     subplot(1,2,1);
@@ -160,10 +181,12 @@ else
     f_p(m.var.coord(:,3)<0.0001,:)=0;
     end
     f.int_comp.ModMembrane=f_b+f_p+f_AV;
-    Vtot=Vtot+V_A_Vol(1);
+    Vtot=Vtot+V_A_Vol(1); 
     m.var.f.A=V_A_Vol(2);
     m.var.f.V=V_A_Vol(3);
+    %pure bending energy: m.pm.k_c*sum(0.5*(2*m.var.f.kH).^2.*m.var.f.A)
 end
 f.int_V.ModMembrane=Vtot;
 f.int_tot.ModMembrane=cell(1,1);
-f.int_tot.ModMembrane{1}=f.int_const.ModMembrane+f.int_comp.ModMembrane+f.int_rand.ModMembrane;
+%for converting to CS-based remeshing
+f.int_tot.ModMembrane{1}=f.int_const.ModMembrane*abs(m.pm.remeshScheme-1)+f.int_comp.ModMembrane+f.int_rand.ModMembrane; 
