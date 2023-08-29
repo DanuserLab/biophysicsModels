@@ -4,6 +4,7 @@ ip = inputParser;
 ip.CaseSensitive = false;
 ip.addRequired('f', @(x) isa(x,'TypForce'));
 ip.addRequired('M', @(x) isa(x,'model'));
+% ip.addParameter('Rbend', [], @isnumeric); 
 ip.parse(f,M,varargin{:}); 
 %----------------------------------------------------------------------------------------
             i_mod=[M.i_mod.ModFreeParticle,M.i_mod.ModMembrane];  %1: AP2 as free particle; 2: ModMembrane
@@ -27,6 +28,7 @@ idMembrane=[idMembrane;idMembraneTem];
 idFreeParticle=[idFreeParticle;idFreeParticleTem];
 end
 
+f.int_V.ModFreeParticle_ModMembrane=0;
 f.int_comp.ModFreeParticle_ModMembrane=cell(2,1);
 f.int_comp.ModFreeParticle_ModMembrane{1}=zeros(M.mod{i_mod(1)}.var.n_coord,3);
 f.int_comp.ModFreeParticle_ModMembrane{2}=zeros(M.mod{i_mod(2)}.var.n_coord,3);
@@ -36,9 +38,9 @@ Vpair=zeros(nPair,1);
 Fpair=zeros(nPair,3);
 
 for iPair=1:nPair
-   Vpair(iPair)=0.5*f.pm.k_ModFreeParticle_ModMembrane*...
+   Vpair(iPair)=0.5*f.pm.k_ModFreeParticle_ModMembrane(1)*...
           sum((M.mod{M.i_mod.ModMembrane}.var.coord(idMembrane(iPair),:)-M.mod{M.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)).^2,2);
-   Fpair(iPair,:) = -f.pm.k_ModFreeParticle_ModMembrane*(M.mod{M.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)-...
+   Fpair(iPair,:) = -f.pm.k_ModFreeParticle_ModMembrane(1)*(M.mod{M.i_mod.ModFreeParticle}.var.coord(idFreeParticle(iPair),:)-...
                                                        M.mod{M.i_mod.ModMembrane}.var.coord(idMembrane(iPair),:));%force on ModFreeParticle 
 end
 
@@ -56,6 +58,42 @@ for iPair=1:nPair
         idMin(iCunq(iPair))=iPair;
     end
 end
+Rbend=f.pm.k_ModFreeParticle_ModMembrane(2);
+if ~isempty(Rbend)
+    %attracting center: following unit vector of direction, out for Rbend
+    for iUnq=1:Nunq
+        idMem=idMembrane(idMin(iUnq));
+        idFP=idFreeParticle(idMin(iUnq));
+        n_node=M.mod{M.i_mod.ModMembrane}.var.n_node(idMem);
+        idMemNB=M.mod{M.i_mod.ModMembrane}.var.j_T(idMem,1:n_node);
+        V=0.5*f.pm.k_ModFreeParticle_ModMembrane(1)*...
+          sum((M.mod{M.i_mod.ModMembrane}.var.coord(idMemNB,:)...
+             -(M.mod{M.i_mod.ModFreeParticle}.var.coord(idFP,:)+M.mod{M.i_mod.ModMembrane}.var.f.u_K(idMem,:)*Rbend)).^2,2);
+        F=-f.pm.k_ModFreeParticle_ModMembrane(1)*...
+            (M.mod{M.i_mod.ModMembrane}.var.coord(idMemNB,:)...
+             -(M.mod{M.i_mod.ModFreeParticle}.var.coord(idFP,:)+M.mod{M.i_mod.ModMembrane}.var.f.u_K(idMem,:)*Rbend));
+        f.int_comp.ModFreeParticle_ModMembrane{2}(idMemNB,:)=...
+            f.int_comp.ModFreeParticle_ModMembrane{2}(idMemNB,:)+F;
+        f.int_comp.ModFreeParticle_ModMembrane{2}(idMem,:)=...
+            f.int_comp.ModFreeParticle_ModMembrane{2}(idMem,:)-sum(F);
+        f.int_V.ModFreeParticle_ModMembrane=f.int_V.ModFreeParticle_ModMembrane+sum(V);
+    end
+    %taking 1-ring average
+%     Fsave=zeros(M.mod{M.i_mod.ModMembrane}.var.n_coord,3);
+%     for i=1:M.mod{M.i_mod.ModMembrane}.var.n_coord
+%         idx=M.mod{M.i_mod.ModMembrane}.var.j_T(i,1:M.mod{M.i_mod.ModMembrane}.var.n_node(i));
+%         Fsave(i,:)=(f.int_comp.ModFreeParticle_ModMembrane{2}(i,:)+...
+%                    mean(f.int_comp.ModFreeParticle_ModMembrane{2}(idx,:)))*0.5;
+%     end
+%     f.int_comp.ModFreeParticle_ModMembrane{2}=Fsave;
+    %%
+%     fig=figure;
+%     plot(M.mod{M.i_mod.ModMembrane},'f',fig); hold on;
+% %     plot(M.mod{M.i_mod.ModFreeParticle},'f',fig);hold on;
+%     R=M.mod{M.i_mod.ModMembrane}.var.coord(idMemNB,:);
+%     scatter3(R(:,1),R(:,2),R(:,3),20,'filled','MarkerFaceColor',[1 0 1]); hold on;
+%     quiver3(R(:,1),R(:,2),R(:,3),F(:,1),F(:,2),F(:,3),'linewidth',2);
+else
 for iUnq=1:Nunq
     iPair=idMin(iUnq);
 %     FdotU=dot(Fpair(iPair,:),M.mod{M.i_mod.ModMembrane}.var.f.u_K(idMembrane(iPair),:),2);  
@@ -71,11 +109,12 @@ for i=1:M.mod{M.i_mod.ModMembrane}.var.n_coord
 end
 f.int_comp.ModFreeParticle_ModMembrane{2}=f_tem;
 %projecting to normal of membrane
-
-V_tot=sum(Vunq);
-f.int_V.ModFreeParticle_ModMembrane=V_tot;
-f.int_tot.ModFreeParticle_ModMembrane=f.int_comp.ModFreeParticle_ModMembrane;
 %--------------------------------------------------------------------------
+end
+
+% V_tot=sum(Vunq);
+% f.int_V.ModFreeParticle_ModMembrane=V_tot;
+f.int_tot.ModFreeParticle_ModMembrane=f.int_comp.ModFreeParticle_ModMembrane;
 %%
 % figure();
 % quiver3(mod.mod{mod.i_mod.ModMembrane}.var.coord(:,1),...
@@ -96,4 +135,4 @@ f.int_tot.ModFreeParticle_ModMembrane=f.int_comp.ModFreeParticle_ModMembrane;
 %                  x_lim=[-15 15];
 %            xlim(x_lim);ylim(x_lim);zlim(x_lim);
 %--------------------------------------------------------------------------
-end
+end 

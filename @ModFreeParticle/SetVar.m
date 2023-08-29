@@ -17,6 +17,7 @@ if isempty(coordAssigned)
                    obj.pm.lim_xyz(3,1)+(rand(obj.pm.n,1))*(obj.pm.lim_xyz(3,2)-obj.pm.lim_xyz(3,1))];
 else
     obj.var.coord=coordAssigned;
+    obj.var.n_coord=size(obj.var.coord,1);
 end
 %----------------------------------------------------------------------------------------
 obj.var.follow=struct('nameV','ModClathrin_ModFreeParticle','nameIdNeighbor','j_T','idModFollower',2,'idModFollowee',3,...

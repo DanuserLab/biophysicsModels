@@ -54,14 +54,17 @@ for iSubPlot=1:nSubplot
 for iModPlot=1:nModPlot
     i=idModPlot(iModPlot);
     if strcmp(M.name{i},'ModMembrane')
-        plot(M.mod{M.i_mod.ModMembrane},'f',f,'LineStyle','-','facealpha',1);
+        plot(M.mod{M.i_mod.ModMembrane},'f',f,'LineStyle','-','facealpha',1,'LineWidth', 0.5,'LineCol',[0.1490    0.1490    0.1490]);
+        a=gca;
+        h = findobj(a,'Type','Patch');
+        h.FaceColor=[0.5804 0.1608 0.1608];
     elseif strcmp(M.name{i},'ModFreeParticle')
         plot(M.mod{M.i_mod.ModFreeParticle},'f',f,'Color',[0 1 0]);
     elseif strcmp(M.name{i},'ModClathrin')
-        col_tem=zeros(M.mod{M.i_mod.ModClathrin}.var.n_coord,3); col_tem(:,2)=0.2;col_tem(:,2)=1;col_tem(:,3)=0.2;
+        col_tem=zeros(M.mod{M.i_mod.ModClathrin}.var.n_coord,3); col_tem(:,2)=0.;col_tem(:,2)=1;col_tem(:,3)=1;
         plot(M.mod{M.i_mod.ModClathrin},'f',f,'simple',true,'col',col_tem);
     elseif strcmp(M.name{i},'ModSubstrate')
-        plot(M.mod{M.i_mod.ModSubstrate},'f',f,'Color',[1 0 0]);
+        plot(M.mod{M.i_mod.ModSubstrate},'f',f,'Color',[0 1 0]);
     elseif strcmp(M.name{i},'ModPolymerChain')
         plot(M.mod{M.i_mod.ModPolymerChain},'f',f,'facealpha',1);
     else

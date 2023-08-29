@@ -19,6 +19,7 @@ ip.addParameter('FaceAlpha', 1, @isnumeric);
 ip.addParameter('bar_name', {'\kappa'}, @iscell);
 ip.addParameter('PaperPosition', [0 0 5 5], @isnumeric);
 ip.addParameter('LineStyle', 'none', @ischar);
+ip.addParameter('LineCol', [0 1 1], @isnumeric);
 ip.addParameter('light_ang',[0 30]);
 ip.addParameter('LineWidth', 1, @isnumeric);
 ip.addParameter('view_ang', [10 30], @isnumeric);
@@ -88,7 +89,7 @@ p.FaceAlpha = ip.Results.FaceAlpha;           % remove the transparency
 %p.FaceColor = 'interp';    % set the face colors to be interpolated
 p.LineStyle = LineStyle; %p.LineStyle = 'none';      % remove the lines
 p.LineWidth = LineWidth;
-p.EdgeColor=[0 1 1];
+p.EdgeColor=ip.Results.LineCol;
 %colormap(copper)
 f.PaperUnits = 'centimeters';
 f.PaperPosition = PaperPosition;

@@ -6,6 +6,7 @@ properties
     pm
     prop
     failInfo
+    name
 end
 %==========================================================================
 %==========================================================================    
@@ -17,10 +18,16 @@ methods
         ip.addParameter('unit', [], @isobject);
         ip.addParameter('lim_xyz', [-5 5;-5 5;-5 5], @isnumeric);
         ip.addParameter('coordAssigned', [], @isnumeric);
+        ip.addParameter('name', [], @ischar);
         ip.parse(n,varargin{:}); 
 %--------------------------------------------------------------------------
         obj.prop = {'Particle'};
         obj.failInfo='';
+%--------------------------------------------------------------------------        
+        obj.name=ip.Results.name;
+        if isempty(obj.name)
+            obj.name={'default'};
+        end
 %--------------------------------------------------------------------------        
         unit=ip.Results.unit;
             if isempty(unit)

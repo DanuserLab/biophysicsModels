@@ -18,6 +18,7 @@ classdef BiophysicsApp
         [] = exampleLamellipodia(dirRoot,dirMod,varargin);
         [] = exampleEndocytosis(dirRoot,dirMod,varargin);
         [] = memoryTest(dirRoot,dirMod,varargin);
+        [] = ClathrinMediatedEndocytosisInit(dirRoot,dirMod,varargin);
     end
 end
 
